@@ -6,80 +6,126 @@
 # 5 = team2 (event)
 
 import os
+import json
 
-balancedDir = 'data/splitted/balanced/'
-balancedDirCod = os.fsencode(balancedDir)
+def reset_game_stats(dic):
+	teams = ['team1', 'team2']
+	for team in teams:
+		dic[team]['num_throws_2'] = 0
+		dic[team]['num_score_2'] = 0
+		dic[team]['num_throws_3'] = 0
+		dic[team]['num_score_3'] = 0
+		dic[team]['rate_2'] = 0
+		dic[team]['rate_3'] = 0
+		dic[team]['final_score'] = 0
 
-for i, file in enumerate(os.listdir(balancedDirCod)):
-	filename = os.fsdecode(file)
+		dic[team]['num_throws_2'] = 0
+		dic[team]['num_score_2'] = 0
+		dic[team]['num_throws_3'] = 0
+		dic[team]['num_score_3'] = 0
+		dic[team]['rate_2'] = 0
+		dic[team]['rate_3'] = 0
+		dic[team]['final_score'] = 0
 
-	print(filename)
+def read_team_action(team, columns):
 
-	score = [0,0]
-	at2_attempt = 0
-	at2_success = 0
-	at2_rate = 0
-	at3_attempt = 0
-	at3_success = 0
-	at3_rate = 0
+	if team == 'team1':
+		team_col = 1
+	elif team == 'team2':
+		team_col = 5
 
-	with open (balancedDir + filename, 'r') as f:
+	if columns[team_col].find('misses') > 0:
 
-		for i, line in enumerate(f):
+		if columns[team_col].find('2-pt') > 0:
+			gameStats[team]['num_throws_2'] += 1
 
-			columns = line.split(',')
+		elif columns[team_col].find('3-pt') > 0:
+			gameStats[team]['num_throws_3'] += 1
 
-			#game start
-			if i == 0:
-				team1 = columns[1]
-				team2 = columns[5]
-				print(team1, 'x', team2[:-1])
-				continue
+	elif columns[team_col].find('makes') > 0:
 
-			#quarter start and jump ball
-			elif columns[1] and (columns[5] and columns[5] != '\n'):
-				continue
+		if columns[team_col].find('2-pt') > 0:
+			gameStats[team]['num_throws_2'] += 1
+			gameStats[team]['num_score_2'] += 1
+			gameStats[team]['final_score'] += 2
 
-			elif columns[1]:
-				if columns[1].find('misses') > 0:
-					if columns[1].find('2-pt') > 0:
-						at2_attempt += 1
-					elif columns[1].find('3-pt') > 0:
-						at3_attempt += 1
+		elif columns[team_col].find('3-pt') > 0:
+			gameStats[team]['num_throws_3'] += 1
+			gameStats[team]['num_score_3'] += 1
+			gameStats[team]['final_score'] += 3
 
-				elif columns[1].find('makes') > 0:
-					if columns[1].find('2-pt') > 0:
-						at2_attempt += 1
-						at2_success += 1
-						score[0] += 2
-					elif columns[1].find('3-pt') > 0:
-						at3_attempt += 1
-						at3_success += 1
-						score[0] += 3
-					elif columns[1].find('free') > 0:
-						score[0] += 1
+		elif columns[team_col].find('free') > 0:
+			gameStats[team]['final_score'] += 1
 
-			elif columns[5] and columns[5] != '\n':
+def read_line(line, i, results):
+	columns = line.split(',')
 
-				if columns[5].find('misses') > 0:
-					if columns[5].find('2-pt') > 0:
-						at2_attempt += 1
-					elif columns[5].find('3-pt') > 0:
-						at3_attempt += 1
+	#game start line
+	if i == 0:
+		team1 = columns[1]
+		team2 = columns[5]
+		results.write(team1 + ' x ' + team2)
 
-				elif columns[5].find('makes') > 0:
-					if columns[5].find('2-pt') > 0:
-						at2_attempt += 1
-						at2_success += 1
-						score[1] += 2
-					elif columns[5].find('3-pt') > 0:
-						at3_attempt += 1
-						at3_success += 1
-						score[1] += 3
-					elif columns[5].find('free') > 0:
-						score[1] += 1
+	#team1 throws
+	elif columns[1]:
+		read_team_action('team1', columns)
 
-		at2_rate = at2_success/at2_attempt
-		at3_rate = at3_success/at3_attempt
+	#team2 throws
+	elif columns[5] and columns[5] != '\n':
+		read_team_action('team2', columns)
 
-	print(at2_rate, at3_rate, '\n')
+def read_file(path, results):
+	f = open(path, 'r')
+
+	for i, line in enumerate(f):
+		read_line(line, i, results)
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
+
+gameStats = {
+	'team1': {},
+	'team2': {}
+}
+
+reset_game_stats(gameStats)
+
+evenDir = 'data/splitted/even/'
+evenDirCod = os.fsencode(evenDir)
+evenResultsFile = open('results/evenGames.txt', 'w')
+
+oneDir = 'data/splitted/one_sided/'
+oneDirCod = os.fsencode(oneDir)
+oneResultsFile = open('results/oneGames.txt', 'w')
+
+dirs = [evenDir, oneDir]
+
+for d in dirs:
+
+	cod = os.fsencode(d)
+	
+	if d == evenDir:
+		resultFilePath = 'results/evenGames.txt'
+	else:
+		resultFilePath = 'results/oneGames.txt'
+
+	results = open(resultFilePath, 'w')
+	
+	for i, file in enumerate(os.listdir(cod)):
+		
+		filename = os.fsdecode(file)
+
+		path = d+filename
+
+		results.write(path + '\n')
+		
+		reset_game_stats(gameStats)
+		read_file(path, results)
+
+		results.write(json.dumps(gameStats))
+		results.write('\n\n')
+
+	results.close()
+
