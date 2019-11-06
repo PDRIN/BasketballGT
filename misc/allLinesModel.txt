@@ -1,0 +1,10 @@
+foul = 58
+makes = 109
+misses = 116
+rebound = 116
+enters = 55
+turnovers = 35
+timeout = 9	
+intro = 1
+jumpball = 1
+start = 4
