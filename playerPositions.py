@@ -5,6 +5,7 @@ import pandas as pd
 def convert_names(name):
 	names = name.split(' ')
 	names[0] = (names[0][0] + '.')
+	names = names[:2]
 	new_name = ' '.join(names)
 
 	return new_name
@@ -24,10 +25,29 @@ def read_file(path):
 
 	return teams
 
+def getPlayerPosition(data, player):
+	possibilities = data.loc[data['smallname'] == player]
+	rows = possibilities.shape[0]
+
+	if rows>1:
+		return "MULTIOPTIONS"
+
+	if possibilities.empty:
+		return "NOTFOUND"
+
+	else:
+		#print(possibilities)
+		#print(possibilities['position'].iloc[0])
+		return possibilities['position'].iloc[0]
+
 def linkPlayerPosition(playerPosition, teams, teamPlayerPosition):
 	for team in teams:
+		teamPlayerPosition[team] = {}
+
 		for player in teams[team]:
-			pass
+			teamPlayerPosition[team][player] = getPlayerPosition(playerPosition, player)
+
+
 data = pd.read_csv("data/player_data.csv")
 
 data = data.loc[data['year_end'] > 2016]
@@ -39,7 +59,6 @@ data['smallname'] = smallname
 
 data.to_csv('data/player_data_mod.csv')
 
-
 teamPlayerPosition = {}
 
 playersPath = 'results/playerByTeam.txt'
@@ -48,4 +67,4 @@ teams = read_file(playersPath)
 
 linkPlayerPosition(data, teams, teamPlayerPosition)
 
-
+outF.write(json.dumps(teamPlayerPosition, indent=2))

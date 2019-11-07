@@ -1,26 +1,7 @@
-gameStats = {
-	'team1': {},
-	'team2': {}
-}
+import pandas as pd
 
-def reset_game_stats(d):
-	teams = ['team1', 'team2']
-	for team in teams:
-		d[team]['num_throws_2'] = 0,
-		d[team]['num_score_2'] = 0,
-		d[team]['num_throws_3'] = 0,
-		d[team]['num_score_3'] = 0,
-		d[team]['rate_2'] = 0,
-		d[team]['rate_3'] = 0,
-		d[team]['final_score'] = 0,
+data = pd.read_csv("data/player_data.csv")
 
-		d[team]['num_throws_2'] = 0,
-		d[team]['num_score_2'] = 0,
-		d[team]['num_throws_3'] = 0,
-		d[team]['num_score_3'] = 0,
-		d[team]['rate_2'] = 0,
-		d[team]['rate_3'] = 0,
-		d[team]['final_score'] = 0
+data = data.loc[data['year_end'] > 2016]
 
-reset_game_stats(gameStats)
-print(gameStats)
+print(data.position.unique())

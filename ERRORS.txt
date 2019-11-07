@@ -1,0 +1,111 @@
+{
+	"New York": {
+		"M. Beasley": "F",
+		"L. Kornet": "C-F",
+		"I. Hicks": "F"
+	},
+	"Oklahoma City": {
+    "J. Grant": "F",
+    "P. Dozier": "G"
+  },
+  "Boston": {
+    "M. Morris": "F",
+    "X. Silas": "G"
+  },
+  "Phoenix": {
+    "J. Jackson": "F-G",
+    "D. Jones": "F-G",
+    "D. Reed": "G",
+    "S. Harrison": "G",
+    "J. Gray": "G"
+  },
+  "Detroit": {
+    "D. Buycks": "G",
+    "R. Hearn": "G",
+    "L. Montero": "G"
+  },
+  "Miami": {
+    "J. Johnson": "F",
+    "D. Jones": "F-G",
+    "M. Williams": "G"
+  },
+  "Charlotte": {
+    "M. Williams": "F"
+  },
+  "Brooklyn": {
+    "J. Webb": "F",
+    "M. Doyle": "G"
+  },
+  "New Orleans": {
+    "J. Holiday": "G",
+    "J. Crawford": "G",
+    "J. Smith": "F",
+    "J. Jones": "F"
+  },
+  "Atlanta": {
+    "M. Plumlee": "C-F",
+    "J. Morris": "G",
+    "A. White": "F"
+  },
+  "Sacramento": {
+    "B. Bogdanovic": "G",
+    "J. Jackson": "F",
+    "N. Hayes": "F"
+  },
+  "LA Clippers": {
+    "T. Wallace": "G"
+  },
+  "Houston": {
+    "J. Johnson": "G-F",
+    "M. Brown": "G",
+    "A. Jackson": "G"
+  },
+  "Milwaukee": {
+    "M. Plumlee": "C-F",
+    "X. Munford": "G"
+  },
+  "Toronto": {
+    "M. Miller": "F",
+    "N. Hayes": "F"
+  },
+  "Philadelphia": {
+    "J. Young": "G-F",
+    "L. Drew": "G",
+    "J. McAdoo": "F"
+  },
+  "Memphis": {
+    "A. Harrison": "G",
+    "J. Green": "F",
+    "M. Henry": "G-F",
+    "X. Rathan-Mayes": "G",
+    "M. Teague": "G",
+    "M. Brooks": "G-F",
+    "O. Johnson": "F"
+  },
+  "Dallas": {
+    "S. Hopson": "G-F",
+    "A. Harrison": "G",
+    "J. Jones": "F",
+    "J. Warney": "F"
+  },
+  "Orlando": {
+    "R. Purvis": "G"
+  },
+  "Cleveland": {
+    "J. Smith": "G",
+    "J. Green": "F",
+    "K. Perkins": "C"
+  },
+  "Minnesota": {
+    "J. Crawford": "G",
+    "T. Jones": "G",
+    "J. Patton": "C",
+  },
+  "LA Lakers": {
+    "N. Hayes": "F",
+    "A. Ingram": "G",
+    "T. Wear": "F",
+    "D. Williams": "F",
+  },
+}
+
