@@ -2,27 +2,27 @@
 	"New York": {
 		"M. Beasley": "F",
 		"L. Kornet": "C-F",
-		"I. Hicks": "F"
+		"I. Hicks": "F-C"
 	},
 	"Oklahoma City": {
     "J. Grant": "F",
-    "P. Dozier": "G"
+    "P. Dozier": "G-F"
   },
   "Boston": {
     "M. Morris": "F",
-    "X. Silas": "G"
+    "X. Silas": "G-F"
   },
   "Phoenix": {
     "J. Jackson": "F-G",
     "D. Jones": "F-G",
-    "D. Reed": "G",
+    "D. Reed": "G-F",
     "S. Harrison": "G",
     "J. Gray": "G"
   },
   "Detroit": {
     "D. Buycks": "G",
-    "R. Hearn": "G",
-    "L. Montero": "G"
+    "R. Hearn": "G-F",
+    "L. Montero": "G-F"
   },
   "Miami": {
     "J. Johnson": "F",
@@ -34,23 +34,26 @@
   },
   "Brooklyn": {
     "J. Webb": "F",
-    "M. Doyle": "G"
+    "M. Doyle": "G-F"
   },
   "New Orleans": {
     "J. Holiday": "G",
+    "E. Okafor": "C-F",
+    "L. Drew": "G",
+    "W. Lemon": "G",
     "J. Crawford": "G",
     "J. Smith": "F",
     "J. Jones": "F"
   },
   "Atlanta": {
     "M. Plumlee": "C-F",
-    "J. Morris": "G",
-    "A. White": "F"
+    "J. Morris": "G-F",
+    "A. White": "F-G"
   },
   "Sacramento": {
     "B. Bogdanovic": "G",
     "J. Jackson": "F",
-    "N. Hayes": "F"
+    "N. Hayes": "F-C"
   },
   "LA Clippers": {
     "T. Wallace": "G"
@@ -66,12 +69,12 @@
   },
   "Toronto": {
     "M. Miller": "F",
-    "N. Hayes": "F"
+    "N. Hayes": "F-C"
   },
   "Philadelphia": {
     "J. Young": "G-F",
     "L. Drew": "G",
-    "J. McAdoo": "F"
+    "J. McAdoo": "F-C"
   },
   "Memphis": {
     "A. Harrison": "G",
@@ -89,7 +92,7 @@
     "J. Warney": "F"
   },
   "Orlando": {
-    "R. Purvis": "G"
+    "R. Purvis": "G-F"
   },
   "Cleveland": {
     "J. Smith": "G",
@@ -103,9 +106,45 @@
   },
   "LA Lakers": {
     "N. Hayes": "F",
-    "A. Ingram": "G",
-    "T. Wear": "F",
+    "A. Ingram": "G-F",
+    "T. Wear": "F-G",
     "D. Williams": "F",
   },
+  "Denver": {
+    "M. Beasley": "G",
+    "M. Plumlee": "C-F",
+    "M. Morris": "G"
+  },
+  "Chicago": {
+    "J. Holiday": "G",
+    "J. Grant": "G"
+  },
+  "Indiana": {
+    "B. Bogdanovic": "G-F",
+    "J. Young": "G",
+    "B. Moore": "F-C",
+    "T. McKinney-Jones": "G-F",
+    "E. Sumner": "G-F"
+  },
+  "San Antonio": {
+    "D. Green": "G-F"
+  },
+  "Utah": {
+    "D. Stockton": "G",
+    "J. Johnson": "G-F",
+    "E. McCree": "F-C",
+    "N. Mitrou-Long": "G"
+  },
+  "Washington": {
+    "M. Morris": "F",
+    "J. Smith": "F-C",
+    "D. Robinson": "F-G"
+  },
+  "Golden State": {
+    "D. Green": "F",
+    "S. Curry": "G",
+    "D. Jones": "C",
+    "C. Boucher": "F-C"
+  }
 }
 
