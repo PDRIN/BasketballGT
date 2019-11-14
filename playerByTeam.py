@@ -1,3 +1,5 @@
+#creates a file playerByTeam.txt in 'results' directory containing all teams and their players
+
 import os
 import json
 

@@ -4,93 +4,106 @@
 # 3 = score
 # 4 = pointsHome (scored in this event)
 # 5 = team2 (event)
-
+from enum import Enum
 import os
 import json
 
-def reset_game_stats(dic):
-	teams = ['team1', 'team2']
-	for team in teams:
-		dic[team]['num_throws_2'] = 0
-		dic[team]['num_score_2'] = 0
-		dic[team]['num_throws_3'] = 0
-		dic[team]['num_score_3'] = 0
-		dic[team]['rate_2'] = 0
-		dic[team]['rate_3'] = 0
-		dic[team]['final_score'] = 0
+class Strats(Enum):
+	LANE = 0
+	THREE = 1
+	LANE_THREE = 2
 
-		dic[team]['num_throws_2'] = 0
-		dic[team]['num_score_2'] = 0
-		dic[team]['num_throws_3'] = 0
-		dic[team]['num_score_3'] = 0
-		dic[team]['rate_2'] = 0
-		dic[team]['rate_3'] = 0
-		dic[team]['final_score'] = 0
+def change_player(comp, player_out, player_in):
+	comp['players'].remove(player_out)
+	comp['players'].append(player_in)
 
-def read_team_action(team, columns):
+def remove_noise(string):
+	newString = string
+	if newString[-1] == '\n':
+		newString = newString[:-1]
+	if newString[0] == '\"':
+		newString = newString[1:]
+	
+	return newString
 
-	if team == 'team1':
-		team_col = 1
-	elif team == 'team2':
-		team_col = 5
+def add_player_to_comp(comp, player):
+	truePlayer = remove_noise(player)
 
-	if columns[team_col].find('misses') > 0:
+	if truePlayer not in comp['players']:
+		comp['players'].append(truePlayer)
 
-		if columns[team_col].find('2-pt') > 0:
-			gameStats[team]['num_throws_2'] += 1
+def find_player(team, action, team_comps):
+	words = action.split(' ')
 
-		elif columns[team_col].find('3-pt') > 0:
-			gameStats[team]['num_throws_3'] += 1
+	#if words[0][0] == '\"':
+		#print('ADLER', action, path)
 
-	elif columns[team_col].find('makes') > 0:
+	if (action.find('misses') > 0) or (action.find('makes') > 0):
+		add_player_to_comp(team_comps[team], words[0] + ' ' + words[1])
 
-		if columns[team_col].find('2-pt') > 0:
-			gameStats[team]['num_throws_2'] += 1
-			gameStats[team]['num_score_2'] += 1
-			gameStats[team]['final_score'] += 2
+	elif action.find('enters') > 0:	
+		if words[1] == 'Mbah':
+			add_player_to_comp(team_comps[team], words[8] + ' ' + words[9])
+		elif words[1] == 'Lemon':
+			add_player_to_comp(team_comps[team], words[7] + ' ' + words[8])
+		else:
+			add_player_to_comp(team_comps[team], words[6] + ' ' + words[7])
 
-		elif columns[team_col].find('3-pt') > 0:
-			gameStats[team]['num_throws_3'] += 1
-			gameStats[team]['num_score_3'] += 1
-			gameStats[team]['final_score'] += 3
+def search_player(columns, team_comps, team1, team2):
+	#team1 acts
+	if columns[1] and len(team_comps[team1]['players']) < 5:
+		find_player(team1, columns[1], team_comps)
 
-		elif columns[team_col].find('free') > 0:
-			gameStats[team]['final_score'] += 1
+	#team2 acts
+	elif columns[5] and columns[5] != '\n' and len(team_comps[team2]['players']) < 5:
+		find_player(team2, columns[5], team_comps)
 
-def read_line(line, i, results):
-	columns = line.split(',')
+def blank_teamcomp():
+	return {
+		'type': None,
+		'players': []
+	}
 
-	#game start line
-	if i == 0:
-		team1 = columns[1]
-		team2 = columns[5]
-		results.write(team1 + ' x ' + team2)
+def first_read(file, team_comps):
+	team1 = ''
+	team2 = ''
 
-	#team1 throws
-	elif columns[1]:
-		read_team_action('team1', columns)
+	lines = file.readlines()
+	first_line = lines[0]
 
-	#team2 throws
-	elif columns[5] and columns[5] != '\n':
-		read_team_action('team2', columns)
+	last_line = lines[-1]
+	columns = last_line.split(',')
+	score = columns[3]
+	points = score.split('-')
 
-def read_file(path, results):
-	f = open(path, 'r')
+	victorious = team1 if points[1] <= points[0] else team2
 
-	for i, line in enumerate(f):
-		read_line(line, i, results)
+	for i, line in enumerate(lines):
+
+		columns = line.split(',')
+
+		if i == 0:
+			team1 = columns[1]
+			team2 = columns[5][:-1]
+			team_comps[team1] = blank_teamcomp()
+			team_comps[team2] = blank_teamcomp()
+
+
+		elif i == 1 or i == 2:
+			continue
+
+		else:
+			search_player(columns, team_comps, team1, team2)
+
+		if len(team_comps[team1]['players']) == 5 and len(team_comps[team2]['players']) == 5:
+			break
+
+	print(team_comps)
 
 ################################################################################
 ################################################################################
 ################################################################################
 ################################################################################
-
-gameStats = {
-	'team1': {},
-	'team2': {}
-}
-
-reset_game_stats(gameStats)
 
 evenDir = 'data/splitted/even/'
 evenDirCod = os.fsencode(evenDir)
@@ -102,16 +115,20 @@ oneResultsFile = open('results/oneGames.txt', 'w')
 
 dirs = [evenDir, oneDir]
 
+data = {
+	'even': {
+		'vitoria': {},
+		'derrota': {}
+	},
+	'one-sided': {
+		'vitoria': {},
+		'derrota': {}
+	}
+}
+
 for d in dirs:
 
 	cod = os.fsencode(d)
-	
-	if d == evenDir:
-		resultFilePath = 'results/evenGames.txt'
-	else:
-		resultFilePath = 'results/oneGames.txt'
-
-	results = open(resultFilePath, 'w')
 	
 	for i, file in enumerate(os.listdir(cod)):
 		
@@ -119,12 +136,13 @@ for d in dirs:
 
 		path = d+filename
 
-		results.write(path + '\n')
-		
-		reset_game_stats(gameStats)
-		read_file(path, results)
+		f = open(path, 'r')
 
-		results.write(json.dumps(gameStats))
-		results.write('\n\n')
+		team_comps = {}
 
-	results.close()
+		first_read(f, team_comps)
+
+		# if d == evenDir:
+		# 	read_file(path, data['even'])
+		# else:
+		# 	read_file(path, data['one-sided'])

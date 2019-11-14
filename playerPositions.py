@@ -1,3 +1,5 @@
+#creates a file player_team_position.txt in 'results' directory containing all team, players and they respective positions
+
 import os
 import json
 import pandas as pd

@@ -1,7 +1,13 @@
-import pandas as pd
+a = {
+	'oi': {
+		'a': 1,
+		'b': 2
+	}
+}
 
-data = pd.read_csv("data/player_data.csv")
+def dale(di):
+	di['a'] = 7
 
-data = data.loc[data['year_end'] > 2016]
+dale(a['oi'])
 
-print(data.position.unique())
+print(a)

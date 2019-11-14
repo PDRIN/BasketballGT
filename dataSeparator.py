@@ -1,3 +1,5 @@
+#separate one-sided games from balanced games in two directories
+
 import os
 import shutil
 
