@@ -105,16 +105,33 @@ def first_read(file, team_comps):
 
 	print(team_comps)
 
-def extract_payoff(team, victorious, action, team_comps, data):
+def get_keyword(words):
+	player_name = remove_noise(words[0] + ' ' + words[1])
+	if player_name = 'L. Mbah':
+		keyword = words[5]
+	elif player_name = 'W. Lemon':
+		keyword = words[4]
+	else:
+		keyword = words[3]
+
+	return keyword
+
+def is_2_point(words):
+	keyword = get_keyword(words)
+	if keyword[0] == '2':
+		return True
+	return False
+
+def is_3_point(words):
+	keyword = get_keyword(words)
+	if keyword[0] == '3':
+		return True
+	return False
+
+def extract_payoff(team, other_team, victorious, action, team_comps, game_type_data):
 	words = action.split(' ')
 
-	#if words[0][0] == '\"':
-		#print('ADLER', action, path)
-
-	if (action.find('misses') > 0) or (action.find('makes') > 0):
-		#soca bagulho no payoff
-
-	elif action.find('enters') > 0:	
+	if action.find('enters') > 0:	
 
 		player_out = words[0] + ' ' + words[1]
 
@@ -130,15 +147,41 @@ def extract_payoff(team, victorious, action, team_comps, data):
 			player_in = words[6] + ' ' + words[7]
 			change_player(team_comps[team], player_out, player_in)
 
+		return
+
+	team_strat = team_comps[team]['type']
+	other_team_strat = team_comps[team]['type']
+
+	if team == victorious:
+		cell = game_type_data['victory'][team_strat][other_team_strat]
+
+	else:
+		cell = game_type_data['defeat'][team_strat][other_team_strat]
+
+	if (action.find('misses') > 0):
+		if is_2_point(words):
+			cell.try_2 += 1
+
+		elif is_3_point(words):
+			cell.try_3 += 1
+
+	if (action.find('makes') > 0):
+		if is_2_point(words):
+			cell.try_2 += 1
+			cell.hit_2 += 1
+
+		elif is_3_point(words):
+			cell.try_3 += 1
+			cell.hit_3 += 1
 
 def search_team_action(columns, team_comps, data, team1, team2, victorious):
 	#team1 acts
 	if columns[1]:
-		extract_payoff(team1, victorious, columns[1], team_comps, data)
+		extract_payoff(team1, team2, victorious, columns[1], team_comps, data)
 
 	#team2 acts
 	elif columns[5] and columns[5] != '\n':
-		extract_payoff(team2, victorious, columns[1], team_comps, data)
+		extract_payoff(team2, team1, victorious, columns[1], team_comps, data)
 
 def second_read(file, team_comps, data):
 	team1 = ''
@@ -170,12 +213,12 @@ def second_read(file, team_comps, data):
 def build_data_dic():
 	data = {
 		'even': {
-			'vitoria': [],
-			'derrota': []
+			'victory': [],
+			'defeat': []
 		},
 		'one-sided': {
-			'vitoria': [],
-			'derrota': []
+			'victory': [],
+			'defeat': []
 		}
 	}
 
