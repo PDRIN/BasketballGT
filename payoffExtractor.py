@@ -37,7 +37,6 @@ def change_player(comp, player_out, player_in):
 
 	comp['players'].remove(player_out)
 	comp['players'].append(player_in)
-	#solve_comp(comp)
 
 def add_player_to_comp(comp, player):
 	truePlayer = remove_noise(player)
@@ -128,7 +127,30 @@ def is_3_point(words):
 		return True
 	return False
 
-def extract_payoff(team, other_team, victorious, action, team_comps, game_type_data):
+def set_comp_type(comp, team, positions, misses):
+	has_cf = False
+	has_c = False
+	for player in comp[team]['players']:
+		player_position = positions[team]['players'][player]
+
+		if len(player_position) >= 5:
+			player_position = misses[team]['lpayers'][player]
+
+		if player_position == 'C-F' or player_position == 'F-C':
+			has_cf = True
+		if player_position == 'C':
+			has_c = True
+
+	if has_cf and has_c:
+		return Strats.LANE
+
+	#xor operation
+	elif has_c != has_cf:
+		return Strats.LANE_THREE
+
+	return Strats.THREE
+
+def extract_payoff(team, other_team, victorious, action, team_comps, game_type_data, positions, misses):
 	words = action.split(' ')
 
 	if action.find('enters') > 0:	
@@ -146,6 +168,8 @@ def extract_payoff(team, other_team, victorious, action, team_comps, game_type_d
 		else:
 			player_in = words[6] + ' ' + words[7]
 			change_player(team_comps[team], player_out, player_in)
+
+		set_comp_type(team_comps, team, position, misses)
 
 		return
 
@@ -174,16 +198,24 @@ def extract_payoff(team, other_team, victorious, action, team_comps, game_type_d
 			cell.try_3 += 1
 			cell.hit_3 += 1
 
-def search_team_action(columns, team_comps, data, team1, team2, victorious):
+def search_team_action(columns, team_comps, data, team1, team2, victorious, positions, misses):
 	#team1 acts
 	if columns[1]:
-		extract_payoff(team1, team2, victorious, columns[1], team_comps, data)
+		extract_payoff(team1, team2, victorious, columns[1], team_comps, data, positions, misses)
 
 	#team2 acts
 	elif columns[5] and columns[5] != '\n':
-		extract_payoff(team2, team1, victorious, columns[1], team_comps, data)
+		extract_payoff(team2, team1, victorious, columns[1], team_comps, data, positions, misses)
 
 def second_read(file, team_comps, data):
+
+	player_position_file = open('results/player_team_position.txt')
+	player_position = json.load(player_position_file)
+
+	#a miss file was manually created to fill misses in the dataset used to get player positions
+	player_position_miss_file = open('results/player_team_position_misses.txt')
+	player_misses = json.load(player_position_miss_file)
+
 	team1 = ''
 	team2 = ''
 
@@ -203,12 +235,13 @@ def second_read(file, team_comps, data):
 		if i == 0:
 			team1 = columns[1]
 			team2 = columns[5][:-1]
+			set_comp_type(team_comps, team, player_position, player_misses)
 
 		elif i == 1 or i == 2:
 			continue
 
 		else:
-			search_team_action(columns, team_comps, data, team1, team2, victorious)
+			search_team_action(columns, team_comps, data, team1, team2, victorious, player_position_file, player_position_miss_file)
 
 def build_data_dic():
 	data = {
