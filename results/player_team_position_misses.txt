@@ -102,13 +102,13 @@
   "Minnesota": {
     "J. Crawford": "G",
     "T. Jones": "G",
-    "J. Patton": "C",
+    "J. Patton": "C"
   },
   "LA Lakers": {
     "N. Hayes": "F",
     "A. Ingram": "G-F",
     "T. Wear": "F-G",
-    "D. Williams": "F",
+    "D. Williams": "F"
   },
   "Denver": {
     "M. Beasley": "G",
