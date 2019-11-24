@@ -33,13 +33,12 @@ def change_player(comp, player_out, player_in):
 	truePlayerOut = remove_noise(player_out)
 	truePlayerIn = remove_noise(player_in)
 
+	if truePlayerIn in comp['players'] and truePlayerOut in comp['players']:
+		return
+
 	# print(comp)
 	# print('In <<<<', truePlayerIn)
 	# print('Out >>>>', truePlayerOut)
-
-	if truePlayerIn in comp['players'] and truePlayerOut in comp['players']:
-		print("POSITION CHANGE\n")
-		return
 
 	comp['players'].remove(truePlayerOut)
 	comp['players'].append(truePlayerIn)
@@ -78,7 +77,33 @@ def search_player(team, action, team_comps, ignore_list):
 			return
 		add_player_to_comp(team_comps[team], words[3] + ' ' + words[4], ignore_list)
 
-def find_starting_comp(lines, starting_line, team_comps, team1, team2):
+def set_comp_type(comp, team, positions, misses):
+	has_cf = False
+	has_c = False
+
+	for player in comp[team]['players']:
+
+		player_position = positions[team][player]
+
+		if len(player_position) >= 5:
+			player_position = misses[team][player]
+
+		if player_position == 'C-F' or player_position == 'F-C':
+			has_cf = True
+		if player_position == 'C':
+			has_c = True
+
+	if has_cf and has_c:
+		comp[team]['type'] = Strats.LANE
+
+	#xor operation
+	elif has_c != has_cf:
+		comp[team]['type'] = Strats.LANE_THREE
+
+	else:
+		comp[team]['type'] = Strats.THREE
+
+def find_starting_comp(lines, starting_line, team_comps, team1, team2, positions, misses):
 	t1_ignore_list = []
 	t2_ignore_list = []
 
@@ -97,6 +122,8 @@ def find_starting_comp(lines, starting_line, team_comps, team1, team2):
 			search_player(team2, columns[5], team_comps, t2_ignore_list)
 
 		if len(team_comps[team1]['players']) == 5 and len(team_comps[team2]['players']) == 5:
+			set_comp_type(team_comps, team1, positions, misses)
+			set_comp_type(team_comps, team2, positions, misses)
 			break
 
 def get_team_names(line):
@@ -105,15 +132,6 @@ def get_team_names(line):
 	team2 = columns[5][:-1]
 
 	return team1, team2
-
-def first_read(file, team_comps):
-	lines = file.readlines()
-
-	team1, team2 = get_team_names(lines[0])
-
-	find_starting_comp(lines, 0, team_comps, team1, team2)
-
-	print(team_comps, '\n')
 
 def get_keyword(words):
 	player_name = remove_noise(words[0] + ' ' + words[1])
@@ -138,36 +156,8 @@ def is_3_point(words):
 		return True
 	return False
 
-def set_comp_type(comp, team, positions, misses):
-	has_cf = False
-	has_c = False
-
-	for player in comp[team]['players']:
-
-		player_position = positions[team][player]
-
-		if len(player_position) >= 5:
-			player_position = misses[team][player]
-
-		if player_position == 'C-F' or player_position == 'F-C':
-			has_cf = True
-		if player_position == 'C':
-			has_c = True
-
-	if has_cf and has_c:
-		comp[team]['type'] = Strats.LANE
-
-	#xor operation
-	elif has_c != has_cf:
-		comp[team]['type'] = Strats.LANE_THREE
-
-	comp[team]['type'] = Strats.THREE
-
 def extract_payoff(team, other_team, victorious, action, team_comps, game_type_data, positions, misses):
 	words = action.split(' ')
-
-	# if action == 'Start of 2nd quarter':
-	# 	print(action.find("start"))
 
 	if action.find('enters') > 0:	
 		player_in = words[0] + ' ' + words[1]
@@ -188,8 +178,13 @@ def extract_payoff(team, other_team, victorious, action, team_comps, game_type_d
 
 		return
 
+	if team_comps[team]['type'] == None:
+		set_comp_type(team_comps, team, positions, misses)
+	if team_comps[other_team]['type'] == None:
+		set_comp_type(team_comps, other_team, positions, misses)
+
 	team_strat = team_comps[team]['type'].value
-	other_team_strat = team_comps[team]['type'].value
+	other_team_strat = team_comps[other_team]['type'].value
 
 	if team == victorious:
 		cell = game_type_data['victory'][team_strat][other_team_strat]
@@ -221,7 +216,7 @@ def get_victorious_team(line, team1, team2):
 
 	return victorious
 
-def second_read(file, team_comps, data):
+def get_payoff(file, team_comps, data):
 	player_position_file = open('results/player_team_position.txt')
 	player_positions = json.load(player_position_file)
 
@@ -235,8 +230,7 @@ def second_read(file, team_comps, data):
 
 	victorious = get_victorious_team(lines[-1], team1, team2)
 
-	set_comp_type(team_comps, team1, player_positions, player_misses)
-	set_comp_type(team_comps, team2, player_positions, player_misses)
+	find_starting_comp(lines, 0, team_comps, team1, team2, player_positions, player_misses)
 
 	for i, line in enumerate(lines):
 
@@ -245,17 +239,14 @@ def second_read(file, team_comps, data):
 		#team1 acts
 		if columns[1]:
 			if columns[1].find('Start') >= 0:
-				find_starting_comp(lines, i, team_comps, team1, team2)
-				set_comp_type(team_comps, team1, player_positions, player_misses)
-				set_comp_type(team_comps, team2, player_positions, player_misses)
+				#print('=======================================') 
+				find_starting_comp(lines, i, team_comps, team1, team2, player_positions, player_misses)
 
 			extract_payoff(team1, team2, victorious, columns[1], team_comps, data, player_positions, player_misses)
 
 		#team2 acts
 		if columns[5] and columns[5] != '\n':
 			extract_payoff(team2, team1, victorious, columns[5], team_comps, data, player_positions, player_misses)
-
-#		search_team_action(columns, team_comps, data, team1, team2, victorious, player_position, player_misses)
 
 def build_data_dict():
 	data = {
@@ -307,36 +298,29 @@ dirs = [evenDir, oneDir]
 
 data = build_data_dict()
 
-# for d in dirs:
+for d in dirs:
 
-# 	cod = os.fsencode(d)
+	cod = os.fsencode(d)
 	
-# 	for i, file in enumerate(os.listdir(cod)):
-# 		# if d == evenDir:
-# 		# 	read_file(path, data['even'])
-# 		# else:
-# 		# 	read_file(path, data['one-sided'])
+	for i, file in enumerate(os.listdir(cod)):
+		filename = os.fsdecode(file)
+		path = d+filename
+		f = open(path, 'r')
+
+		#print(i, path)
 		
-# 		filename = os.fsdecode(file)
+		team_comps = {}
 
-# 		path = d+filename
-
-# 		f = open(path, 'r')
-
-# 		team_comps = {}
-
-# 		print(filename)
-
-# 		first_read(f, team_comps)
-
-# 		second_read(f, team_comps, data)
+		if d == evenDir:
+			get_payoff(f, team_comps, data['even'])
+		else:
+			get_payoff(f, team_comps, data['one-sided'])
 
 
-filename = 'data/raw/2018/201710170CLE.txt'
-f = open(filename, 'r')
-team_comps = {}
-first_read(f, team_comps)
-f.seek(0)
-second_read(f, team_comps, data['even'])
+# filename = 'data/splitted/even/201710240ORL.txt'
+# f = open(filename, 'r')
+# team_comps = {}
+
+# get_payoff(f, team_comps, data['even'])
 
 print_data(data)
