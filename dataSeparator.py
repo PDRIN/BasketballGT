@@ -3,7 +3,7 @@
 import os
 import shutil
 
-threshold = 30
+threshold = 20
 
 srcDirectory = 'data/raw/2018/'
 srcDirectoryCod = os.fsencode(srcDirectory)
@@ -29,6 +29,6 @@ for i, file in enumerate(os.listdir(srcDirectoryCod)):
 		if abs(int(s[0]) - int(s[1])) >= threshold:
 			shutil.copy(srcDirectory + filename, dstDirectory + 'one_sided/' + filename)
 		else:
-			shutil.copy(srcDirectory + filename, dstDirectory + 'balanced/' + filename)
+			shutil.copy(srcDirectory + filename, dstDirectory + 'even/' + filename)
 
 print(i+1)

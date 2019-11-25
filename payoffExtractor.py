@@ -19,6 +19,8 @@ class Stats():
 		self.hit_2 = 0
 		self.try_3 = 0
 		self.hit_3 = 0
+		self.acc_2 = 0
+		self.acc_3 = 0
 
 def remove_noise(string):
 	newString = string
@@ -270,17 +272,27 @@ def build_data_dict():
 
 	return data
 
+def calculate_data_acc(data):
+	for gameType in data:
+		for result in data[gameType]:
+			for strat1 in Strats:
+				for strat2 in Strats:
+					stats = data[gameType][result][strat1.value][strat2.value]
+					if stats.try_2 != 0:
+						stats.acc_2 = stats.hit_2/stats.try_2
+					if stats.try_3 != 0:
+						stats.acc_3 = stats.hit_3/stats.try_3
+
 def print_data(data):
 	for gameType in data:
 		for result in data[gameType]:
 			for strat1 in Strats:
 				for strat2 in Strats:
+					stats = data[gameType][result][strat1.value][strat2.value]
 					print(gameType, result, strat1, strat2)
-					print(data[gameType][result][strat1.value][strat2.value].try_2)
-					print(data[gameType][result][strat1.value][strat2.value].hit_2)
-					print(data[gameType][result][strat1.value][strat2.value].try_3)
-					print(data[gameType][result][strat1.value][strat2.value].hit_3)
-					print('=======================================================')
+					print(stats.try_2, stats.hit_2, stats.acc_2)
+					print(stats.try_3, stats.hit_3, stats.acc_3, '\n')
+
 ################################################################################
 ################################################################################
 ################################################################################
@@ -298,6 +310,19 @@ dirs = [evenDir, oneDir]
 
 data = build_data_dict()
 
+ignore_files = [
+	'201710200PHI.txt',
+	'201710240ORL.txt',
+	'201710250PHI.txt',
+	'201710280MEM.txt',
+	'201712230IND.txt',
+	'201801280HOU.txt',
+	'201802060BRK.txt',
+	'201802090DET.txt',
+	'201803150DEN.txt',
+	'201805020HOU.txt'
+]
+
 for d in dirs:
 
 	cod = os.fsencode(d)
@@ -305,6 +330,10 @@ for d in dirs:
 	for i, file in enumerate(os.listdir(cod)):
 		filename = os.fsdecode(file)
 		path = d+filename
+
+		if filename in ignore_files:
+			continue
+
 		f = open(path, 'r')
 
 		#print(i, path)
@@ -322,5 +351,5 @@ for d in dirs:
 # team_comps = {}
 
 # get_payoff(f, team_comps, data['even'])
-
+calculate_data_acc(data)
 print_data(data)
