@@ -158,7 +158,7 @@ def is_3_point(words):
 		return True
 	return False
 
-def extract_payoff(team, other_team, victorious, action, team_comps, game_type_data, positions, misses):
+def extract_payoff(team, other_team, action, team_comps, game_type_data, positions, misses):
 	words = action.split(' ')
 
 	if action.find('enters') > 0:	
@@ -188,10 +188,7 @@ def extract_payoff(team, other_team, victorious, action, team_comps, game_type_d
 	team_strat = team_comps[team]['type'].value
 	other_team_strat = team_comps[other_team]['type'].value
 
-	if team == victorious:
-		cell = game_type_data['victory'][team_strat][other_team_strat]
-	else:
-		cell = game_type_data['defeat'][team_strat][other_team_strat]
+	cell = game_type_data[team_strat][other_team_strat]
 
 	if (action.find('misses') > 0):
 		if is_2_point(words):
@@ -209,15 +206,6 @@ def extract_payoff(team, other_team, victorious, action, team_comps, game_type_d
 			cell.try_3 += 1
 			cell.hit_3 += 1
 
-def get_victorious_team(line, team1, team2):
-	columns = line.split(',')
-	score = columns[3]
-	points = score.split('-')
-
-	victorious = team1 if points[1] <= points[0] else team2
-
-	return victorious
-
 def get_payoff(file, team_comps, data):
 	player_position_file = open('results/player_team_position.txt')
 	player_positions = json.load(player_position_file)
@@ -229,8 +217,6 @@ def get_payoff(file, team_comps, data):
 	lines = file.readlines()
 	
 	team1, team2 = get_team_names(lines[0])
-
-	victorious = get_victorious_team(lines[-1], team1, team2)
 
 	find_starting_comp(lines, 0, team_comps, team1, team2, player_positions, player_misses)
 
@@ -244,59 +230,73 @@ def get_payoff(file, team_comps, data):
 				#print('=======================================') 
 				find_starting_comp(lines, i, team_comps, team1, team2, player_positions, player_misses)
 
-			extract_payoff(team1, team2, victorious, columns[1], team_comps, data, player_positions, player_misses)
+			extract_payoff(team1, team2, columns[1], team_comps, data, player_positions, player_misses)
 
 		#team2 acts
 		if columns[5] and columns[5] != '\n':
-			extract_payoff(team2, team1, victorious, columns[5], team_comps, data, player_positions, player_misses)
+			extract_payoff(team2, team1, columns[5], team_comps, data, player_positions, player_misses)
 
 def build_data_dict():
 	data = {
-		'even': {
-			'victory': [],
-			'defeat': []
-		},
-		'one-sided': {
-			'victory': [],
-			'defeat': []
-		}
+		'even': [],
+		'one-sided': []
 	}
 
 	for gameType in data:
-		for result in data[gameType]:
-			for strat1 in Strats:
-				data[gameType][result].append([])
-				for strat2 in Strats:
-					data[gameType][result][strat1.value].append([])
-					data[gameType][result][strat1.value][strat2.value] = Stats()
+		for strat1 in Strats:
+			data[gameType].append([])
+			for strat2 in Strats:
+				data[gameType][strat1.value].append([])
+				data[gameType][strat1.value][strat2.value] = Stats()
 
 	return data
 
 def calculate_data_acc(data):
 	for gameType in data:
-		for result in data[gameType]:
-			for strat1 in Strats:
-				for strat2 in Strats:
-					stats = data[gameType][result][strat1.value][strat2.value]
-					if stats.try_2 != 0:
-						stats.acc_2 = stats.hit_2/stats.try_2
-					if stats.try_3 != 0:
-						stats.acc_3 = stats.hit_3/stats.try_3
+		for strat1 in Strats:
+			for strat2 in Strats:
+				stats = data[gameType][strat1.value][strat2.value]
+				if stats.try_2 != 0:
+					stats.acc_2 = stats.hit_2/stats.try_2
+				if stats.try_3 != 0:
+					stats.acc_3 = stats.hit_3/stats.try_3
 
-def print_data(data):
+def print_data(data, f):
 	for gameType in data:
-		for result in data[gameType]:
-			for strat1 in Strats:
-				for strat2 in Strats:
-					stats = data[gameType][result][strat1.value][strat2.value]
-					print(gameType, result, strat1, strat2)
-					print(stats.try_2, stats.hit_2, stats.acc_2)
-					print(stats.try_3, stats.hit_3, stats.acc_3, '\n')
+		for strat1 in Strats:
+			for strat2 in Strats:
+				stats = data[gameType][strat1.value][strat2.value]
+				f.write(gameType + ' ' + strat1.name + ' ' + strat2.name + '\n')
+				f.write(str(stats.try_2)  + ' ' +  str(stats.hit_2)  + ' ' + str(stats.acc_2) + '\n')
+				f.write(str(stats.try_3)  + ' ' +  str(stats.hit_3)  + ' ' + str(stats.acc_3) + '\n\n')
 
 ################################################################################
 ################################################################################
 ################################################################################
 ################################################################################
+
+def create_payoff_matrix():
+	payoff_m = []
+	for strat1 in Strats:
+		payoff_m.append([])
+		for strat2 in Strats:
+			payoff_m[strat1.value].append([])
+
+	return payoff_m
+
+def calculate_payoff_matrix(data):
+	payoff_m = create_payoff_matrix()
+
+	for strat1 in Strats:
+		for strat2 in Strats:
+			cell = data[strat1.value][strat2.value]
+			total_throws = cell.try_2 + cell.try_3
+			total_points = (cell.hit_2 * 2) + (cell.hit_3 * 3)
+			payoff = total_points / total_throws
+			payoff_m[strat1.value][strat2.value] = payoff
+
+	return payoff_m
+
 
 evenDir = 'data/splitted/even/'
 evenDirCod = os.fsencode(evenDir)
@@ -336,8 +336,6 @@ for d in dirs:
 
 		f = open(path, 'r')
 
-		#print(i, path)
-		
 		team_comps = {}
 
 		if d == evenDir:
@@ -345,11 +343,19 @@ for d in dirs:
 		else:
 			get_payoff(f, team_comps, data['one-sided'])
 
-
-# filename = 'data/splitted/even/201710240ORL.txt'
-# f = open(filename, 'r')
-# team_comps = {}
-
-# get_payoff(f, team_comps, data['even'])
 calculate_data_acc(data)
-print_data(data)
+
+data_filename = 'results/result_data.txt'
+data_f = open(data_filename, 'w')
+print_data(data, data_f)
+
+
+payoff_data = {}
+
+payoff_data['even'] = calculate_payoff_matrix(data['even'])
+payoff_data['one-sided'] = calculate_payoff_matrix(data['one-sided'])
+
+payoffs_filename = 'results/payoffs.txt'
+payoffs_f = open(payoffs_filename, 'w')
+
+payoffs_f.write(json.dumps(payoff_data, indent=2))
