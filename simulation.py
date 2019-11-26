@@ -14,38 +14,49 @@ def read_data():
 	    data = json.load(f)
 	    return data
 
-def choose_strats(mixed_strategy_equi):
+def choose_strat(mixed_strategy_equi):
 	thresholds = np.cumsum(mixed_strategy_equi)
 	thresholds *= 100000
 
 	rand = random.randint(1,100000)
 
+	if rand <= thresholds[0]:
+		return 0
+	elif rand <= thresholds[1]:
+		return 1
+	else:
+		return 2
 
-# def mixed_strategy(m):
-# 	a00 = (m[0][0] - m[0][2]) - (m[1][0] - m[1][2])
-# 	a01 = (m[0][1] - m[0][2]) - (m[1][1] - m[1][2])
-# 	b0 = (m[1][2] - m[0][2])
+def rand_shot_type(shot_chances):
+	rand = random.randint(1,100000)
 
-# 	a10 = (m[1][0] - m[1][2]) - (m[2][0] - m[2][2])
-# 	a11 = (m[1][1] - m[1][2]) - (m[2][1] - m[2][2])
-# 	b1 = (m[2][2] - m[1][2])
+	if rand <= (shot_chances['chance_2'])*100000:
+		return 2
+	else:
+		return 3
 
-# 	a = np.array([[a00, a01], [a10, a11]])
-# 	b = np.array([b0,b1])
+def get_shot_hit(shot_type, shot_accs):
+	rand = random.randint(1,100000)
 
-# 	p0, p1 = np.linalg.solve(a,b)
+	if shot_type == 2:
+		if rand > shot_accs['acc_2'] * 100000:
+			return False
+		else:
+			return True
 
-# 	p2 = 1 - p0 - p1
+	elif shot_type == 3:
+		if rand > shot_accs['acc_3'] * 100000:
+			return False
+		else:
+			return True
 
-# 	return [p0, p1, p2]
-
-# data = read_data()
-
-# nash_mix_strat_even = mixed_strategy(data['payoffs']['even'])
-# nash_mix_strat_one = mixed_strategy(data['payoffs']['one-sided'])
-
-# print(mixed_strategy(data['payoffs']['even']))
-# print(mixed_strategy(data['payoffs']['one-sided']))
+def get_points_scored(shot_type, shot_hit):
+	if shot_type == 2 and shot_hit:
+		return 2
+	elif shot_type == 3 and shot_hit:
+		return 3
+	else:
+		return 0
 
 n_turns = 100
 
@@ -57,12 +68,30 @@ mixed_nash_p2_even = [0.18665,0.23077,0.58258]
 mixed_nash_p1_one = [0.79501,0,0.20499]
 mixed_nash_p2_one = [0.66376,0.33624,0]
 
-for turn in xrange(0, n_turns):
+score1 = np.zeros((n_turns,), dtype=int)
+score2 = np.zeros((n_turns,), dtype=int)
+
+for turn in range(0, n_turns):
 	strat1 = choose_strat(mixed_nash_p1_even)
 	strat2 = choose_strat(mixed_nash_p2_even)
 
-	shot_type = rand_shot_type(shot_type_chance)
-	shot_hit = 
+	shot_type = rand_shot_type(data['shot_chances']['even'][strat1][strat2])
+	shot_hit = get_shot_hit(shot_type, data['shot_chances']['even'][strat1][strat2])
 
+	points = get_points_scored(shot_type, shot_hit)
 
+	score1[turn] = points
 
+for turn in range(0, n_turns):
+	strat1 = choose_strat(mixed_nash_p1_even)
+	strat2 = choose_strat(mixed_nash_p2_even)
+
+	shot_type = rand_shot_type(data['shot_chances']['even'][strat1][strat2])
+	shot_hit = get_shot_hit(shot_type, data['shot_chances']['even'][strat1][strat2])
+
+	points = get_points_scored(shot_type, shot_hit)
+
+	score2[turn] = points
+
+print(np.cumsum(score1)[-1])
+print(np.cumsum(score2)[-1])
