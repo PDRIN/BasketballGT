@@ -158,7 +158,7 @@ def is_3_point(words):
 		return True
 	return False
 
-def extract_payoff(team, other_team, action, team_comps, game_type_data, positions, misses):
+def extract_data(team, other_team, action, team_comps, game_type_data, positions, misses):
 	words = action.split(' ')
 
 	if action.find('enters') > 0:	
@@ -206,7 +206,7 @@ def extract_payoff(team, other_team, action, team_comps, game_type_data, positio
 			cell.try_3 += 1
 			cell.hit_3 += 1
 
-def get_payoff(file, team_comps, data):
+def get_game_data(file, team_comps, data):
 	player_position_file = open('results/player_team_position.txt')
 	player_positions = json.load(player_position_file)
 
@@ -230,11 +230,11 @@ def get_payoff(file, team_comps, data):
 				#print('=======================================') 
 				find_starting_comp(lines, i, team_comps, team1, team2, player_positions, player_misses)
 
-			extract_payoff(team1, team2, columns[1], team_comps, data, player_positions, player_misses)
+			extract_data(team1, team2, columns[1], team_comps, data, player_positions, player_misses)
 
 		#team2 acts
 		if columns[5] and columns[5] != '\n':
-			extract_payoff(team2, team1, columns[5], team_comps, data, player_positions, player_misses)
+			extract_data(team2, team1, columns[5], team_comps, data, player_positions, player_misses)
 
 def build_data_dict():
 	data = {
@@ -270,12 +270,7 @@ def print_data(data, f):
 				f.write(str(stats.try_2)  + ' ' +  str(stats.hit_2)  + ' ' + str(stats.acc_2) + '\n')
 				f.write(str(stats.try_3)  + ' ' +  str(stats.hit_3)  + ' ' + str(stats.acc_3) + '\n\n')
 
-################################################################################
-################################################################################
-################################################################################
-################################################################################
-
-def create_payoff_matrix():
+def create_payoff():
 	payoff_m = []
 	for strat1 in Strats:
 		payoff_m.append([])
@@ -284,8 +279,8 @@ def create_payoff_matrix():
 
 	return payoff_m
 
-def calculate_payoff_matrix(data):
-	payoff_m = create_payoff_matrix()
+def calculate_payoff(data):
+	payoff_m = create_payoff()
 
 	for strat1 in Strats:
 		for strat2 in Strats:
@@ -297,6 +292,65 @@ def calculate_payoff_matrix(data):
 
 	return payoff_m
 
+def calculate_strat_usage(data):
+	total_times_used = [0,0,0]
+	even_times_used = [0,0,0]
+	one_times_used = [0,0,0]
+
+	total_confronts = 0
+	even_confronts = 0
+	one_confronts = 0
+
+	for gameType in data:
+		for strat1 in Strats:
+			for strat2 in Strats:
+				cell = data[gameType][strat1.value][strat2.value]
+
+				total_confronts += cell.try_2 + cell.try_3
+				total_times_used[strat1.value] += cell.try_2 + cell.try_3
+
+				if gameType == 'even':
+					even_confronts += cell.try_2 + cell.try_3
+					even_times_used[strat1.value] += cell.try_2 + cell.try_3
+
+				elif gameType == 'one-sided':
+					one_confronts += cell.try_2 + cell.try_3
+					one_times_used[strat1.value] += cell.try_2 + cell.try_3
+
+
+	for strat in Strats:
+		total_times_used[strat.value] /= total_confronts
+		even_times_used[strat.value] /= even_confronts
+		one_times_used[strat.value] /= one_confronts	
+
+	return total_times_used, even_times_used, one_times_used
+
+def calculate_shot_chances(data):
+	shot_chances = []
+
+	for strat1 in Strats:
+		shot_chances.append([])
+		for strat2 in Strats:
+			shot_chances[strat1.value].append([])
+			shot_chances[strat1.value][strat2.value] = {}
+
+			shot_cell = shot_chances[strat1.value][strat2.value]
+			data_cell = data[strat1.value][strat2.value]
+
+			chance_2 = data_cell.try_2/(data_cell.try_2 + data_cell.try_3)
+			chance_3 = data_cell.try_3/(data_cell.try_2 + data_cell.try_3)
+
+			shot_cell['chance_2'] = chance_2
+			shot_cell['chance_3'] = chance_3
+			shot_cell['acc_2'] = data_cell.acc_2
+			shot_cell['acc_3'] = data_cell.acc_3
+
+	return shot_chances
+
+################################################################################
+################################################################################
+################################################################################
+################################################################################
 
 evenDir = 'data/splitted/even/'
 evenDirCod = os.fsencode(evenDir)
@@ -339,9 +393,9 @@ for d in dirs:
 		team_comps = {}
 
 		if d == evenDir:
-			get_payoff(f, team_comps, data['even'])
+			get_game_data(f, team_comps, data['even'])
 		else:
-			get_payoff(f, team_comps, data['one-sided'])
+			get_game_data(f, team_comps, data['one-sided'])
 
 calculate_data_acc(data)
 
@@ -349,13 +403,24 @@ data_filename = 'results/result_data.txt'
 data_f = open(data_filename, 'w')
 print_data(data, data_f)
 
+results = {
+	'payoffs': {},
+	'strat-usage': {
+		'total': [],
+		'even': [],
+		'one-sided': []
+	},
+	'shot_chances': {}
+}
 
-payoff_data = {}
+results['payoffs']['even'] = calculate_payoff(data['even'])
+results['payoffs']['one-sided'] = calculate_payoff(data['one-sided'])
 
-payoff_data['even'] = calculate_payoff_matrix(data['even'])
-payoff_data['one-sided'] = calculate_payoff_matrix(data['one-sided'])
+results['strat-usage']['total'], results['strat-usage']['even'], results['strat-usage']['one-sided'] = calculate_strat_usage(data)
 
-payoffs_filename = 'results/payoffs.txt'
-payoffs_f = open(payoffs_filename, 'w')
+results['shot_chances']['even'] = calculate_shot_chances(data['even'])
+results['shot_chances']['one-sided'] = calculate_shot_chances(data['one-sided'])
 
-payoffs_f.write(json.dumps(payoff_data, indent=2))
+results_filename = 'results/results.txt'
+results_f = open(results_filename, 'w')
+results_f.write(json.dumps(results, indent=2))

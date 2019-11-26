@@ -1,22 +1,19 @@
-from enum import Enum
+import numpy as np
 
-class Strats(Enum):
-	LANE = 0
-	THREE = 1
-	LANE_THREE = 2
+def mixed_strategy(m):
+	a00 = (m[0][0] - m[0][2]) - (m[1][0] - m[1][2])
+	a01 = (m[0][1] - m[0][2]) - (m[1][1] - m[1][2])
+	b0 = (m[1][2] - m[0][2])
 
-def create_payoff_matrix():
-	payoff_m = []
-	for strat1 in Strats:
-		payoff_m.append([])
-		for strat2 in Strats:
-			payoff_m[strat1.value].append([])
+	a10 = (m[1][0] - m[1][2]) - (m[2][0] - m[2][2])
+	a11 = (m[1][1] - m[1][2]) - (m[2][1] - m[2][2])
+	b1 = (m[2][2] - m[1][2])
 
-	return payoff_m
+	a = np.array([[a00, a01], [a10, a11]])
+	b = np.array([b0,b1])
 
-def calculate_payoff_matrix(data, payoff_m):
-	for strat1 in Strats:
-		for strat2 in Strats:
-			cell = data[strat1.value][stra2.value]
-			payoff = (cell.acc_2 * 2) + (cell.acc_3 * 3)
-			payoff_m[strat1.value][stra2.value] = payoff
+	print(np.linalg.solve(a,b))
+
+a = np.array([[1.04, 1.02, 1.08], [0.99, 1.02, 1.01], [1.00, 1.08, 1.05]])
+
+mixed_strategy(a)
