@@ -1,0 +1,5 @@
+- intro (breve sobre teoria dos jogos, breve sobre o que eu estou fazendo)
+- dados (falar quais sao os dados estudados)
+- modelagem (como eu modelei os jogos, estratégias detectadaas e como, equilibrio de nash, divisão entre stomp e disputado)
+- resultados (comparação entre equilibrio de nash e frequencia real de jogadas, comparar gráficos de jogos)
+- conclusões
