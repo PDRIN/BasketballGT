@@ -129,7 +129,7 @@ layout = go.Layout(
         titlefont={'size': 30}),
     title = 'Game Simulation',
     titlefont={'size': 50},
-    showlegend = False
+    showlegend = True
 )
 
 data = [trace1, trace2]

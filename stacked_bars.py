@@ -1,14 +1,14 @@
 import plotly.graph_objects as go
 
-top_labels = ['Lane', '3-points', 'Balanced']
+top_labels = ['Tipo 1', 'Tipo 2', 'Tipo 3']
 
 colors = ['rgb(128,155,206)', 'rgb(250,117,117)', 'rgb(189,136,162)']
 
 x_data = [[9, 13.9, 77.1],
           [18.7, 23.1,58.2]]
 
-y_data = ['Real Usage',
-          'Nash Equi.']
+y_data = ['Uso real',
+          'Equi. Nash']
 
 fig = go.Figure()
 
