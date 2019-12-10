@@ -105,7 +105,10 @@ def set_comp_type(comp, team, positions, misses):
 	else:
 		comp[team]['type'] = Strats.THREE
 
+
 def find_starting_comp(lines, starting_line, team_comps, team1, team2, positions, misses):
+	#players that have entered via substitution are stored in these 2 lists, so they dont
+	#get counted in the starting comp
 	t1_ignore_list = []
 	t2_ignore_list = []
 
@@ -158,23 +161,25 @@ def is_3_point(words):
 		return True
 	return False
 
-def extract_data(team, other_team, action, team_comps, game_type_data, positions, misses):
+def extract_line_data(team, other_team, action, team_comps, game_type_data, positions, misses):
 	words = action.split(' ')
 
+	#this section is in charge of substitutions
 	if action.find('enters') > 0:	
 		player_in = words[0] + ' ' + words[1]
 
+		#Mbah and Lemon are 2 players whose names do not follow the pattern, for some reason
+		#That's why they have to be handled separately
 		if words[1] == 'Mbah':
 			player_out = words[8] + ' ' + words[9]
-			change_player(team_comps[team], player_out, player_in)
 
 		elif words[1] == 'Lemon':
 			player_out = words[7] + ' ' + words[8]
-			change_player(team_comps[team], player_out, player_in)
 
 		else:
 			player_out = words[6] + ' ' + words[7]
-			change_player(team_comps[team], player_out, player_in)
+		
+		change_player(team_comps[team], player_out, player_in)
 
 		set_comp_type(team_comps, team, positions, misses)
 
@@ -206,6 +211,14 @@ def extract_data(team, other_team, action, team_comps, game_type_data, positions
 			cell.try_3 += 1
 			cell.hit_3 += 1
 
+''' 
+The main function. It reads the file, searching for the starting comp in the beggining of
+each quarter (find_starting_comp) and searchs for relevant events: scores and substitutions (extract_line_data).
+Parameters:
+file = game file already opened as 'read only'
+team_comps = empty dictionary (team_comps = {})
+data = custom structured dictionary, will be used to store game stats (irrelevant for formation management)
+'''
 def get_game_data(file, team_comps, data):
 	player_position_file = open('results/player_team_position.txt')
 	player_positions = json.load(player_position_file)
@@ -227,14 +240,13 @@ def get_game_data(file, team_comps, data):
 		#team1 acts
 		if columns[1]:
 			if columns[1].find('Start') >= 0:
-				#print('=======================================') 
 				find_starting_comp(lines, i, team_comps, team1, team2, player_positions, player_misses)
 
-			extract_data(team1, team2, columns[1], team_comps, data, player_positions, player_misses)
+			extract_line_data(team1, team2, columns[1], team_comps, data, player_positions, player_misses)
 
 		#team2 acts
 		if columns[5] and columns[5] != '\n':
-			extract_data(team2, team1, columns[5], team_comps, data, player_positions, player_misses)
+			extract_line_data(team2, team1, columns[5], team_comps, data, player_positions, player_misses)
 
 def build_data_dict():
 	data = {
